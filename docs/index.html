@@ -232,8 +232,7 @@ int main(void)
         以下のターゲット画像1からマッチング画像とマッチする局所特徴点を探し出し，その結果を点と線で示せ．
         また，ターゲット画像2についても同様に結果を表示してみよ．<br />
         局所特徴量の種類は何でも良いが，拡張モジュールを導入していないOpenCV3以降では"SIFT"や"SURF"は使えないので注意．
-        これ以降の説明(特に参考のところ)では"ORB"を用いている．
-        他に<a href="https://www.youtube.com/watch?v=LWY-w8AGGhE">平面トラッキングにより強い</a>KAZE,AKAZEも使える．
+        これ以降の説明(特に参考のところ)では<a href="https://www.youtube.com/watch?v=LWY-w8AGGhE">平面トラッキングにより強い</a>"AKAZE"を用いているが，ORBやKAZEなど他の特徴量でもよい．
         <br /><br />
         マッチング画像(右クリックして「名前をつけてリンク先を保存」)<br />
         <a href="image/matching.png"><img src="image/matching.png" alt="target image" width="128" /></a><br />
@@ -245,24 +244,22 @@ int main(void)
       </p>
       <p>
         <b>参考(OpenCVの関数)</b><br />
-        ORB以外の特徴量を用いる場合は下記ORBの部分をすべてその特徴量名(KAZEやAKAZE,BRISKなど)で置き換えること．
+        AKAZE以外の特徴量を用いる場合は下記AKAZEの部分をすべてその特徴量名(ORBやKAZE,BRISKなど)で置き換えること．
         <ul>
           <li>
             <strong>特徴点検出＆特徴量計算</strong>
-            <pre class="code">Ptr&#060;ORB> ORB::create(int nfeatures,...)</pre>
+            <pre class="code">Ptr&#060;AKAZE> AKAZE::create(AKAZE::DescriptorType descriptor_type = AKAZE::DESCRIPTOR_MLDB ,...)</pre>
             <p>
               特徴点(キーポイント)検出器を生成する．
-              引数のnfeaturesには特徴の最大数(あくまで最大でここで指定した数の点が必ず得られるわけではない)を指定する．
-              指定しなければデフォルトの500が使われる．
-              そのほかに引数に様々なパラメータを指定できる．
+              引数として，特徴量計算(descripter)の種類や検出での閾値などを指定することができるが，そのままデフォルト値を使う場合は引数指定は不要である．
               上記以外の引数については
-              <a href="http://docs.opencv.org/trunk/db/d95/classcv_1_1ORB.html#adc371099dc902a9674bd98936e79739c">OpenCVのドキュメント</a>
+              <a href="https://docs.opencv.org/3.4/d8/d30/classcv_1_1AKAZE.html">OpenCVのドキュメント</a>
               を参照してほしい．なお引数は特徴量の種類によって違うので注意．
             </p>
             <p>
-              実際にキーポイントを抽出し特徴量を計算するためには ORB型のポインタ(Ptr&#060;ORB>はORB型のポインタ)とdetect関数,compute関数を使って，
+              実際にキーポイントを抽出し特徴量を計算するためには AKAZE型のポインタ(Ptr&#060;AKAZE>はAKAZE型のポインタ)とdetect関数,compute関数を使って，
             </p>
-            <pre class="code">Ptr&#060;ORB></FeatureDetector> feature = ORB::create(1500)
+            <pre class="code">Ptr&#060;AKAZE></FeatureDetector> feature = AKAZE::create();
 std::vector&#060;KeyPoint> keypoints;
 feature->detect(image, keypoints);
 
@@ -295,7 +292,7 @@ feature->compute(image, keypoints, descriptor);</pre>
               </table>
             </p>
             <p>
-              BRISK,ORBのようにバイナリ値を用いる特徴量計算機に対してはL1,L2距離ではなくハミング距離を用いるのが一般的である．また，FlannBasedはORBと組み合わせて用いた場合，エラーとなり使えない(FlannBasedはデフォルトでL2距離を使うため)．ORBを使う場合は別のアルゴリズムを用いるようにしよう
+              BRISK,ORBのようにバイナリ値を用いる特徴量計算機に対してはL1,L2距離ではなくハミング距離を用いるのが一般的である．また，FlannBasedはAKAZEやORBと組み合わせて用いた場合，エラーとなり使えない(FlannBasedはデフォルトでL2距離を使うため)．AKAZEやORBなどを使う場合は別のアルゴリズムを用いるようにしよう
               (FlannBasedMatcherでindexParamにflann::LshIndexParamsを指定すれば使える？)．
             </p>
             <p>
@@ -308,6 +305,10 @@ matcher->match(descriptor1, descriptor2, matches);</pre>
             <p>
               とすることで，配列matchesにマッチング結果が格納される．
               match関数の第一,二引数には特徴点検出＆特徴量計算のところで計算した特徴量を格納した行列(マッチング画像とターゲット画像)を渡す．
+            </p>
+            <p>
+              デフォルトだとマッチしたものをすべて返すので，必要に応じてfor文などを使って良いマッチング結果だけを抽出してもよい．
+              例えば，matches[i].distanceでマッチングの距離を取得できるので，これがある閾値以下のものだけを抽出する，などである．
             </p>
             <p><br /></p>
           </li>
